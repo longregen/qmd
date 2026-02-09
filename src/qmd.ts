@@ -82,6 +82,7 @@ import {
   removeContext as yamlRemoveContext,
   setGlobalContext,
   listAllContexts,
+  isValidCollectionName,
   setConfigIndexName,
 } from "./collections.js";
 
@@ -1279,6 +1280,13 @@ async function collectionAdd(pwd: string, globPattern: string, name?: string): P
     collName = parts[parts.length - 1] || 'root';
   }
 
+  // Validate collection name - must contain only alphanumeric, hyphens, and underscores
+  if (!isValidCollectionName(collName)) {
+    console.error(`${c.yellow}Invalid collection name: '${collName}'${c.reset}`);
+    console.error(`Collection names must contain only letters, numbers, hyphens (-), and underscores (_).`);
+    process.exit(1);
+  }
+
   // Check if collection with this name already exists in YAML
   const existing = getCollectionFromYaml(collName);
   if (existing) {
@@ -2391,6 +2399,7 @@ function showHelp(): void {
   console.log("  qmd vsearch <query>           - Vector similarity search");
   console.log("  qmd query <query>             - Combined search with query expansion + reranking");
   console.log("  qmd mcp                       - Start MCP server (for AI agent integration)");
+  console.log("  qmd db <subcommand>           - Database exploration (run 'qmd db' for details)");
   console.log("");
   console.log("Global options:");
   console.log("  --index <name>             - Use custom index name (default: index)");
@@ -2682,6 +2691,12 @@ if (import.meta.main) {
       console.log(`${c.green}✓${c.reset} Database vacuumed`);
 
       closeDb();
+      break;
+    }
+
+    case "db": {
+      const { handleDbCommand } = await import("./db-explorer.js");
+      await handleDbCommand(cli.args);
       break;
     }
 
